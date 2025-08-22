@@ -1,0 +1,68 @@
+name: Angular CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+env:
+  DOCKER_IMAGE_NAME: energyanalytics
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout Code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          npm ci || (echo "❌ npm install failed at src/app/*" && exit 1)
+      # Step 5: Run tests
+      - name: Run Unit Tests
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      # Step 5: Build Angular app
+      - name: Build Angular
+        run: |
+          npm run build -- --configuration=production || (echo "❌ Angular build failed at src/app/*" && exit 1)
+
+      # Step 6: Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Step 7: Build and Push Docker Image
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}   # short commit hash
+          echo "📦 Building Docker image: ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:$IMAGE_TAG"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:$IMAGE_TAG .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+
+          # Also push "latest" tag for main branch
+          if [ "${GITHUB_REF}" == "refs/heads/main" ]; then
+            docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:$IMAGE_TAG ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:latest
+            docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$DOCKER_IMAGE_NAME:latest
+          fi
+
+      # Step 8: Upload build artifacts (only if branch is main)
+      - name: Upload Production Build
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: energyanalytics-dist
+          path: dist/energyanalytics
