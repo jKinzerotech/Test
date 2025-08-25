@@ -14,6 +14,7 @@ import {
   MapMarkerClusterer,
 } from '@angular/google-maps';
 import { Router } from '@angular/router';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { Subscription } from 'rxjs';
 import { CollapsiblePanelComponent } from '../../../../shared/collapsible-panel/collapsible-panel.component';
 import { AppStateService } from '../../../../shared/service/app-state.service';
@@ -40,7 +41,7 @@ export class GoogleMapComponent implements OnInit, OnDestroy {
   latLngPairsSubscription!: Subscription;
   @ViewChildren(MapInfoWindow) infoWindows!: QueryList<MapInfoWindow>;
 
-  showMap: boolean = true;
+  showMap = true;
   @Input() facilitiesData?: any;
   SiteID: any;
   constructor(
@@ -52,15 +53,21 @@ export class GoogleMapComponent implements OnInit, OnDestroy {
   ) {
     this.userId = this.appState.getParameter('userId');
   }
-  markerClustererImagePath =
-    'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m';
+  // markerClustererImagePath =
+  //   'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m';
+  createMarkerClusterer = (
+    map: google.maps.Map,
+    markers: google.maps.Marker[]
+  ) => {
+    return new MarkerClusterer({ map, markers });
+  };
   // circles: IMapCircle[] = [];
   circles: any[] = [];
   latLngPairs: any[] = [];
   map!: google.maps.Map;
   options: google.maps.MapOptions = {};
-  latitude: number = 40.0;
-  longitude: number = -80;
+  latitude = 40.0;
+  longitude = -80;
   userId?: number;
 
   ngOnInit(): void {
@@ -81,7 +88,7 @@ export class GoogleMapComponent implements OnInit, OnDestroy {
   reloadMap(): void {
     this.showMap = false;
     if (this.latLngPairs.length > 0) {
-      let pair = this.latLngPairs[0];
+      const pair = this.latLngPairs[0];
       this.latitude = parseFloat(pair.Latitud);
       this.longitude = parseFloat(pair.Longitude);
     }
@@ -182,7 +189,7 @@ export class GoogleMapComponent implements OnInit, OnDestroy {
   fitMapToBounds(): void {
     const bounds = new google.maps.LatLngBounds();
     this.circles.forEach((circle) => {
-      bounds.extend(circle.getPosition());
+      bounds.extend(new google.maps.LatLng(circle.lat, circle.lng));
     });
     this.map.fitBounds(bounds);
   }

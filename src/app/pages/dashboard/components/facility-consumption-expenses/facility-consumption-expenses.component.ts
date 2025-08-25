@@ -32,11 +32,11 @@ import { FacilityColumnChartComponent } from '../facility-column-chart/facility-
   styleUrl: './facility-consumption-expenses.component.css',
 })
 export class FacilityConsumptionExpensesComponent implements OnInit {
-  @Input() facilitiesData: Facility | undefined;
+  @Input() facilitiesData: Facility | null | undefined;
 
-  label: string = '';
-  type: string = '';
-  title: string = '';
+  label = '';
+  type = '';
+  title = '';
 
   loading$!: Observable<boolean>;
   constructor(
@@ -83,7 +83,7 @@ export class FacilityConsumptionExpensesComponent implements OnInit {
   }
 
   createSummaryFromData(
-    data: Array<{ AssetID: number; BuildingName: string; Value: number }>,
+    data: { AssetID: number; BuildingName: string; Value: number }[],
     flagCondition: (value: number) => boolean
   ): Summary[] {
     return data.map((item) => ({

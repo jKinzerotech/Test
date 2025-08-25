@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Facility, LocationModel } from '../../../../core/models/facility';
 import { SpinnerService } from '../../../../core/services/spinner.service';
@@ -20,9 +20,9 @@ import { LocationService } from '../google-map/services/location.service';
   standalone: true,
   imports: [
     GoogleMapComponent,
- 
+
     // FacilityColumnChartComponent,
- 
+
     SpinnerComponent,
     CommonModule,
     FacilityConsumptionExpensesComponent,
@@ -35,7 +35,8 @@ export class FacilitiesComponent implements OnInit {
   loading$!: Observable<boolean>;
 
   facilities: Facility[] = [];
-  facilitiesData?: Facility;
+  facilitiesData = signal<Facility | null>(null);
+
   facility?: Facility;
   buildings: Location[] = [];
   selectedIndex?: number;
@@ -85,7 +86,7 @@ export class FacilitiesComponent implements OnInit {
     this.appState.addParameter(AppState.FTimezone, facility.FTimezone);
     this.dataEvent.emit(facility);
     this.selectedIndex = index;
-    this.facilitiesData = facility;
+    this.facilitiesData.set(facility);
     this.facilityService.GetDashboardEleExpenses(1, facility.FacilitiesID);
     this.loadBuildings(facility.FacilitiesID);
     this.weatherService.getWeather(

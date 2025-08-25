@@ -5,19 +5,24 @@
 
         @if (showMap) {
         <google-map [options]="options" width="100%" height="300px" (mapClick)="clickMap($event)">
-          <map-marker-clusterer [imagePath]="markerClustererImagePath">
-            @for (circle of circles; track circle.id; let index = $index){
+          <map-marker-clusterer >
+            @for (circle of circles; track circle.id; let index = $index) {
             <map-circle [options]="circle.circleOptions" [center]="circle" />
-            <map-marker #marker="mapMarker" (mouseover)="openMouseoverMarkerInfoWindow(index)"
-              [position]="{lat: circle.lat, lng: circle.lng}"
-              [options]="{ icon: { url: circle.markerOptions.icon.url },label: { text: circle.markerOptions.label.text } }"
-              (mapClick)=" circle.markerOptions.BuildingAvailable==1 ?openMarkerInfoWindow(circle.markerOptions.FacilityID, circle.markerOptions.LocationID, circle.markerOptions.LocationName, circle.markerOptions.SiteID): null">
+            <map-marker #marker="mapMarker" [position]="{ lat: circle.lat, lng: circle.lng }" [options]="{
+                icon: { url: circle.markerOptions.icon.url },
+                label: { text: circle.markerOptions.label.text }
+              }" (mouseover)="openMouseoverMarkerInfoWindow(index)" (focus)="openMouseoverMarkerInfoWindow(index)"
+              (mapClick)="circle.markerOptions.BuildingAvailable === 1
+                ? openMarkerInfoWindow(circle.markerOptions.FacilityID, circle.markerOptions.LocationID, circle.markerOptions.LocationName, circle.markerOptions.SiteID)
+                : null">
             </map-marker>
+
             <map-info-window>
               <div [innerHTML]="circle.markerWindowInfo.html"></div>
             </map-info-window>
             }
           </map-marker-clusterer>
+
         </google-map>
         }
       </ng-template>
